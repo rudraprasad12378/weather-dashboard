@@ -825,3 +825,346 @@ button:disabled {
         transition-duration: 0.01ms !important;
     }
 }
+
+/* =========================================================
+   DYNAMIC WEATHER BACKGROUND
+   ========================================================= */
+
+body {
+    --weather-bg-1: #17243a;
+    --weather-bg-2: #243653;
+    --weather-glow: rgba(45, 185, 255, 0.15);
+
+    transition:
+        background 1.5s ease,
+        color 0.8s ease;
+
+    background:
+        radial-gradient(circle at 20% 20%,
+            var(--weather-glow),
+            transparent 35%),
+        linear-gradient(135deg,
+            var(--weather-bg-1),
+            var(--weather-bg-2));
+}
+
+
+/* =========================================================
+   DAY
+   ========================================================= */
+
+body.weather-day.weather-clear {
+
+    --weather-bg-1: #3b82c4;
+    --weather-bg-2: #9bdcf5;
+
+    --weather-glow:
+        rgba(255, 210, 90, 0.30);
+}
+
+
+body.weather-day.weather-clouds {
+
+    --weather-bg-1: #52677f;
+    --weather-bg-2: #9aabba;
+
+    --weather-glow:
+        rgba(210, 225, 240, 0.20);
+}
+
+
+body.weather-day.weather-rain {
+
+    --weather-bg-1: #285579;
+    --weather-bg-2: #477b9e;
+
+    --weather-glow:
+        rgba(80, 180, 255, 0.20);
+}
+
+
+body.weather-day.weather-drizzle {
+
+    --weather-bg-1: #416783;
+    --weather-bg-2: #7195ad;
+
+    --weather-glow:
+        rgba(100, 200, 255, 0.18);
+}
+
+
+body.weather-day.weather-storm {
+
+    --weather-bg-1: #18283e;
+    --weather-bg-2: #39465c;
+
+    --weather-glow:
+        rgba(120, 150, 220, 0.18);
+}
+
+
+body.weather-day.weather-snow {
+
+    --weather-bg-1: #7197b2;
+    --weather-bg-2: #c7dce8;
+
+    --weather-glow:
+        rgba(240, 250, 255, 0.30);
+}
+
+
+body.weather-day.weather-mist,
+body.weather-day.weather-fog,
+body.weather-day.weather-haze {
+
+    --weather-bg-1: #667785;
+    --weather-bg-2: #a4afb6;
+
+    --weather-glow:
+        rgba(220, 230, 235, 0.18);
+}
+
+
+/* =========================================================
+   NIGHT
+   ========================================================= */
+
+body.weather-night.weather-clear {
+
+    --weather-bg-1: #071225;
+    --weather-bg-2: #172b4a;
+
+    --weather-glow:
+        rgba(75, 130, 220, 0.20);
+}
+
+
+body.weather-night.weather-clouds {
+
+    --weather-bg-1: #101b2c;
+    --weather-bg-2: #293b52;
+
+    --weather-glow:
+        rgba(120, 150, 190, 0.14);
+}
+
+
+body.weather-night.weather-rain {
+
+    --weather-bg-1: #071523;
+    --weather-bg-2: #163651;
+
+    --weather-glow:
+        rgba(40, 150, 230, 0.16);
+}
+
+
+body.weather-night.weather-drizzle {
+
+    --weather-bg-1: #0b1c2d;
+    --weather-bg-2: #23435d;
+
+    --weather-glow:
+        rgba(60, 160, 230, 0.14);
+}
+
+
+body.weather-night.weather-storm {
+
+    --weather-bg-1: #050a13;
+    --weather-bg-2: #17243a;
+
+    --weather-glow:
+        rgba(100, 120, 180, 0.12);
+}
+
+
+body.weather-night.weather-snow {
+
+    --weather-bg-1: #17283b;
+    --weather-bg-2: #405a70;
+
+    --weather-glow:
+        rgba(200, 230, 255, 0.18);
+}
+
+
+body.weather-night.weather-mist,
+body.weather-night.weather-fog,
+body.weather-night.weather-haze {
+
+    --weather-bg-1: #18222d;
+    --weather-bg-2: #374653;
+
+    --weather-glow:
+        rgba(160, 180, 195, 0.12);
+}
+
+
+/* =========================================================
+   ATMOSPHERIC OVERLAY
+   ========================================================= */
+
+body::before {
+
+    content: "";
+
+    position: fixed;
+
+    inset: 0;
+
+    pointer-events: none;
+
+    z-index: -1;
+
+    background:
+        radial-gradient(circle at 80% 15%,
+            var(--weather-glow),
+            transparent 35%);
+
+    opacity: 0.9;
+
+    transition:
+        background 1.5s ease,
+        opacity 1.5s ease;
+}
+
+
+/* =========================================================
+   WEATHER PARTICLES
+   ========================================================= */
+
+.weather-particles {
+
+    position: fixed;
+
+    inset: 0;
+
+    pointer-events: none;
+
+    z-index: 0;
+
+    overflow: hidden;
+
+    opacity: 0;
+
+    transition: opacity 1s ease;
+}
+
+
+/* Rain */
+
+body.weather-rain .weather-particles,
+body.weather-drizzle .weather-particles {
+
+    opacity: 0.35;
+
+    background-image:
+        repeating-linear-gradient(105deg,
+            transparent 0,
+            transparent 14px,
+            rgba(190, 230, 255, 0.18) 15px,
+            transparent 16px);
+
+    background-size: 35px 35px;
+
+    animation: rainMove 0.8s linear infinite;
+}
+
+
+@keyframes rainMove {
+
+    from {
+        background-position: 0 0;
+    }
+
+    to {
+        background-position: -35px 70px;
+    }
+}
+
+
+/* Snow */
+
+body.weather-snow .weather-particles {
+
+    opacity: 0.45;
+
+    background-image:
+        radial-gradient(circle,
+            rgba(255, 255, 255, 0.8) 1px,
+            transparent 2px);
+
+    background-size:
+        35px 35px;
+
+    animation: snowMove 8s linear infinite;
+}
+
+
+@keyframes snowMove {
+
+    from {
+        background-position: 0 0;
+    }
+
+    to {
+        background-position: 30px 120px;
+    }
+}
+
+
+/* =========================================================
+   STORM ATMOSPHERE
+   ========================================================= */
+
+body.weather-storm::after {
+
+    content: "";
+
+    position: fixed;
+
+    inset: 0;
+
+    pointer-events: none;
+
+    background:
+        radial-gradient(circle at 50% 20%,
+            rgba(160, 180, 255, 0.08),
+            transparent 40%);
+
+    animation: stormGlow 5s ease-in-out infinite;
+
+    z-index: -1;
+}
+
+
+@keyframes stormGlow {
+
+    0%,
+    100% {
+        opacity: 0.35;
+    }
+
+    50% {
+        opacity: 0.8;
+    }
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    body,
+    body::before,
+    body::after,
+    .weather-particles {
+
+        animation: none !important;
+
+        transition: none !important;
+    }
+}
