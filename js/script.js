@@ -73,6 +73,12 @@ const feelsLike =
 const pressure =
     document.getElementById("pressure");
 
+const localTime =
+    document.getElementById("local-time");
+
+const localDate =
+    document.getElementById("local-date");
+
 
 // =========================================
 // 3. WEATHER CODE MAPPING
@@ -178,6 +184,8 @@ const weatherIcons = {
 let currentWeatherData = null;
 
 let backgroundTimer = null;
+
+let localClockTimer = null;
 
 
 // =========================================
@@ -489,6 +497,12 @@ weatherForm.addEventListener(
 
             updateWeatherBackground(weather);
 
+
+            // Step 5:
+            // Update live local clock
+
+            updateLocalClock(weather.timezone);
+
         } catch (error) {
 
             console.error(
@@ -624,6 +638,95 @@ function displayWeather(
 
     statusMessage.textContent =
         `Weather updated for ${location.name}.`;
+
+
+    // =====================================
+    // LIVE LOCAL CLOCK
+    // =====================================
+
+    if (data && data.timezone) {
+        updateLocalClock(data.timezone);
+    }
+}
+
+
+// =========================================================
+// 12B. LIVE LOCAL CLOCK
+// =========================================================
+
+function updateLocalClock(timezone) {
+
+    // Stop previous interval
+    if (localClockTimer) {
+        clearInterval(localClockTimer);
+        localClockTimer = null;
+    }
+
+    if (!localTime || !localDate) {
+        return;
+    }
+
+    // Guard against missing/invalid timezone
+    if (!timezone || typeof timezone !== "string") {
+        localTime.textContent = "--:--:--";
+        localDate.textContent = "--";
+        return;
+    }
+
+    let timeFormatter;
+    let dateFormatter;
+
+    try {
+        timeFormatter =
+            new Intl.DateTimeFormat("en-US", {
+                timeZone: timezone,
+                hour: "numeric",
+                minute: "2-digit",
+                second: "2-digit",
+                hour12: true
+            });
+
+        dateFormatter =
+            new Intl.DateTimeFormat("en-US", {
+                timeZone: timezone,
+                year: "numeric",
+                month: "long",
+                day: "numeric"
+            });
+    } catch (error) {
+        console.warn(
+            "Invalid timezone provided:",
+            timezone,
+            error
+        );
+        localTime.textContent = "--:--:--";
+        localDate.textContent = "--";
+        return;
+    }
+
+    function renderTime() {
+        try {
+            const now = new Date();
+            localTime.textContent =
+                timeFormatter.format(now);
+            localDate.textContent =
+                dateFormatter.format(now);
+        } catch (error) {
+            console.warn(
+                "Error rendering local time:",
+                error
+            );
+            localTime.textContent = "--:--:--";
+            localDate.textContent = "--";
+        }
+    }
+
+    // Initial render
+    renderTime();
+
+    // Live update every second
+    localClockTimer =
+        setInterval(renderTime, 1000);
 }
 
 
@@ -1269,6 +1372,11 @@ async function loadWeatherForCurrentLocation() {
                     weatherLocation.textContent =
                         locationName;
                 }
+
+                // Step 6: Update live local clock
+                updateLocalClock(
+                    weather.timezone
+                );
 
                 hideError();
 
