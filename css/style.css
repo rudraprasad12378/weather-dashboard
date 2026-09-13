@@ -648,7 +648,7 @@ body.weather-night .search-form label {
     display: grid;
 
     grid-template-columns:
-        1fr auto;
+        1fr auto auto;
 
     gap: 12px;
 }
