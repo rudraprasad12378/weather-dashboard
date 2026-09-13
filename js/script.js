@@ -1,6 +1,6 @@
 // =========================================
 // WEATHER DASHBOARD
-// STEP 4 — API SETUP
+// DYNAMIC WEATHER + DAY/NIGHT BACKGROUND
 // =========================================
 
 
@@ -116,8 +116,9 @@ const weatherCodes = {
     99: "Thunderstorm with heavy hail"
 };
 
+
 // =========================================
-// WEATHER ICON MAPPING
+// 4. WEATHER ICON MAPPING
 // =========================================
 
 const weatherIcons = {
@@ -163,8 +164,18 @@ const weatherIcons = {
     99: "⛈️"
 };
 
+
 // =========================================
-// 4. HELPER FUNCTIONS
+// 5. BACKGROUND STATE
+// =========================================
+
+let currentWeatherData = null;
+
+let backgroundTimer = null;
+
+
+// =========================================
+// 6. HELPER FUNCTIONS
 // =========================================
 
 function showLoading() {
@@ -177,9 +188,6 @@ function showLoading() {
         "Fetching weather data...";
 
     searchButton.disabled = true;
-
-    searchButton.textContent =
-        "Searching...";
 }
 
 
@@ -188,11 +196,6 @@ function hideLoading() {
     loading.hidden = true;
 
     searchButton.disabled = false;
-
-    searchButton.textContent =
-        "Search";
-
-    cityInput.focus();
 }
 
 
@@ -204,7 +207,6 @@ function showError(message) {
         message;
 
     statusMessage.textContent = "";
-
 }
 
 
@@ -215,7 +217,7 @@ function hideError() {
 
 
 // =========================================
-// 5. GET WEATHER DESCRIPTION
+// 7. GET WEATHER DESCRIPTION
 // =========================================
 
 function getWeatherDescription(code) {
@@ -226,101 +228,7 @@ function getWeatherDescription(code) {
 
 
 // =========================================
-// 6. FORM EVENT
-// =========================================
-
-weatherForm.addEventListener(
-    "submit",
-    async (event) => {
-
-        event.preventDefault();
-
-
-        // Get and clean city name
-
-        const city =
-            cityInput.value.trim();
-
-
-        // Validate input
-
-        if (!city) {
-
-            showError(
-                "Please enter a city name."
-            );
-
-            cityInput.focus();
-
-            return;
-        }
-
-
-        try {
-
-            // Start loading
-
-            showLoading();
-
-            hideError();
-
-
-            // Clear previous status
-
-            statusMessage.textContent =
-                "Searching for weather information...";
-
-
-            // Get coordinates
-
-            const location =
-                await getCityCoordinates(city);
-
-
-            // Get weather
-
-            const weather =
-                await getWeatherData(
-                    location.latitude,
-                    location.longitude
-                );
-
-
-            // Display result
-
-            displayWeather(
-                location,
-                weather
-            );
-
-
-        } catch (error) {
-
-            console.error(
-                "Weather request failed:",
-                error
-            );
-
-
-            showError(
-                error.message ||
-                "Unable to fetch weather information."
-            );
-
-
-        } finally {
-
-            // Always restore the UI
-
-            hideLoading();
-
-        }
-
-    }
-);
-
-// =========================================
-// FETCH WITH TIMEOUT
+// 8. FETCH WITH TIMEOUT
 // =========================================
 
 async function fetchWithTimeout(
@@ -352,11 +260,12 @@ async function fetchWithTimeout(
     } finally {
 
         clearTimeout(timeoutId);
-
     }
 }
+
+
 // =========================================
-// 7. GET CITY COORDINATES
+// 9. GET CITY COORDINATES
 // =========================================
 
 async function getCityCoordinates(city) {
@@ -411,8 +320,9 @@ async function getCityCoordinates(city) {
     }
 }
 
+
 // =========================================
-// 8. GET WEATHER DATA
+// 10. GET WEATHER DATA
 // =========================================
 
 async function getWeatherData(
@@ -420,8 +330,21 @@ async function getWeatherData(
     longitude
 ) {
 
+    /*
+     * Added:
+     *
+     * daily=sunrise,sunset
+     *
+     * This allows the application to determine
+     * the actual day/night cycle for the searched city.
+     */
+
     const url =
-        `${WEATHER_API}?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,surface_pressure&wind_speed_unit=kmh&timezone=auto`;
+        `${WEATHER_API}?latitude=${latitude}&longitude=${longitude}` +
+        `&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,surface_pressure,is_day` +
+        `&daily=sunrise,sunset` +
+        `&wind_speed_unit=kmh` +
+        `&timezone=auto`;
 
     try {
 
@@ -469,7 +392,91 @@ async function getWeatherData(
 
 
 // =========================================
-// 9. DISPLAY WEATHER
+// 11. FORM EVENT
+// =========================================
+
+weatherForm.addEventListener(
+    "submit",
+    async (event) => {
+
+        event.preventDefault();
+
+        const city =
+            cityInput.value.trim();
+
+
+        // Prevent empty searches
+
+        if (!city) {
+
+            showError(
+                "Please enter a city name."
+            );
+
+            return;
+        }
+
+
+        try {
+
+            showLoading();
+
+            hideError();
+
+
+            // Step 1:
+            // Find city coordinates
+
+            const location =
+                await getCityCoordinates(city);
+
+
+            // Step 2:
+            // Fetch weather using coordinates
+
+            const weather =
+                await getWeatherData(
+                    location.latitude,
+                    location.longitude
+                );
+
+
+            // Step 3:
+            // Display weather
+
+            displayWeather(
+                location,
+                weather
+            );
+
+
+            // Step 4:
+            // Update dynamic background
+
+            updateWeatherBackground(weather);
+
+        } catch (error) {
+
+            console.error(
+                "Weather request failed:",
+                error
+            );
+
+            showError(
+                error.message ||
+                "Unable to fetch weather information."
+            );
+
+        } finally {
+
+            hideLoading();
+        }
+    }
+);
+
+
+// =========================================
+// 12. DISPLAY WEATHER
 // =========================================
 
 function displayWeather(
@@ -582,174 +589,506 @@ function displayWeather(
     statusMessage.textContent =
         `Weather updated for ${location.name}.`;
 }
+
+
 // =========================================
-// GET WEATHER ICON
+// 13. GET WEATHER ICON
 // =========================================
 
 function getWeatherIcon(code) {
 
-    return weatherIcons[code] || "🌡️";
-
-}
-
-/* =========================================================
-   DYNAMIC WEATHER + DAY/NIGHT BACKGROUND
-   ========================================================= */
-
-function updateWeatherBackground(weatherData) {
-    if (!weatherData) return;
-
-    /*
-     * Get weather condition from OpenWeatherMap response.
-     * Example:
-     * Clear, Clouds, Rain, Drizzle, Thunderstorm, Snow, Mist
-     */
-    const weatherCondition =
-        weatherData.weather?.[0]?.main?.toLowerCase() || 'clear';
-
-    /*
-     * OpenWeatherMap provides Unix timestamps
-     * for sunrise and sunset.
-     */
-    const sunrise = weatherData.sys?.sunrise;
-    const sunset = weatherData.sys?.sunset;
-
-    /*
-     * Current time in seconds.
-     */
-    const currentTime = Math.floor(Date.now() / 1000);
-
-    /*
-     * Determine whether it is currently night.
-     */
-    const isNight =
-        sunrise &&
-        sunset &&
-        (currentTime < sunrise || currentTime >= sunset);
-
-    /*
-     * Remove old weather classes.
-     */
-    document.body.classList.remove(
-        'weather-clear',
-        'weather-clouds',
-        'weather-rain',
-        'weather-drizzle',
-        'weather-storm',
-        'weather-snow',
-        'weather-mist',
-        'weather-fog',
-        'weather-haze',
-        'weather-day',
-        'weather-night'
-    );
-
-    /*
-     * Add day/night class.
-     */
-    document.body.classList.add(
-        isNight ? 'weather-night' : 'weather-day'
-    );
-
-    /*
-     * Add weather-specific class.
-     */
-    switch (weatherCondition) {
-
-        case 'clear':
-            document.body.classList.add('weather-clear');
-            break;
-
-        case 'clouds':
-            document.body.classList.add('weather-clouds');
-            break;
-
-        case 'rain':
-            document.body.classList.add('weather-rain');
-            break;
-
-        case 'drizzle':
-            document.body.classList.add('weather-drizzle');
-            break;
-
-        case 'thunderstorm':
-            document.body.classList.add('weather-storm');
-            break;
-
-        case 'snow':
-            document.body.classList.add('weather-snow');
-            break;
-
-        case 'mist':
-            document.body.classList.add('weather-mist');
-            break;
-
-        case 'fog':
-            document.body.classList.add('weather-fog');
-            break;
-
-        case 'haze':
-            document.body.classList.add('weather-haze');
-            break;
-
-        default:
-            document.body.classList.add('weather-clear');
-            break;
-    }
-
-    /*
-     * Update background periodically.
-     *
-     * This allows the application to automatically switch
-     * from day → night without refreshing the page.
-     */
-    scheduleDayNightUpdate(weatherData);
+    return weatherIcons[code] ||
+        "🌡️";
 }
 
 
-/* =========================================================
-   AUTOMATIC DAY/NIGHT UPDATE
-   ========================================================= */
+// =========================================================
+// 14. DYNAMIC WEATHER + DAY/NIGHT BACKGROUND
+// =========================================================
 
-let backgroundTimer = null;
+function updateWeatherBackground(data) {
 
-function scheduleDayNightUpdate(weatherData) {
-
-    if (backgroundTimer) {
-        clearTimeout(backgroundTimer);
-    }
-
-    /*
-     * Re-check the day/night state every minute.
-     */
-    backgroundTimer = setTimeout(() => {
-
-        updateWeatherBackground(weatherData);
-
-    }, 60 * 1000);
-}
-
-
-/* =========================================================
-   OPTIONAL: ADD ATMOSPHERIC PARTICLES
-   ========================================================= */
-
-function createWeatherParticles() {
-
-    /*
-     * Prevent duplicate particle containers.
-     */
-    if (document.querySelector('.weather-particles')) {
+    if (!data || !data.current) {
         return;
     }
 
-    const particles = document.createElement('div');
 
-    particles.className = 'weather-particles';
+    // Save latest weather data
 
-    particles.setAttribute('aria-hidden', 'true');
+    currentWeatherData = data;
 
-    document.body.appendChild(particles);
+
+    const weatherCode =
+        Number(data.current.weather_code);
+
+
+    /*
+     * Remove every previous background state.
+     */
+
+    document.body.classList.remove(
+
+        "weather-clear",
+        "weather-clouds",
+        "weather-rain",
+        "weather-drizzle",
+        "weather-snow",
+        "weather-storm",
+        "weather-fog",
+        "weather-mist",
+        "weather-haze",
+
+        "weather-day",
+        "weather-night"
+    );
+
+
+    // =====================================
+    // DETERMINE DAY / NIGHT
+    // =====================================
+
+    const isNight =
+        determineNightState(data);
+
+
+    if (isNight) {
+
+        document.body.classList.add(
+            "weather-night"
+        );
+
+    } else {
+
+        document.body.classList.add(
+            "weather-day"
+        );
+    }
+
+
+    // =====================================
+    // DETERMINE WEATHER TYPE
+    // =====================================
+
+    const weatherType =
+        getWeatherBackgroundType(
+            weatherCode
+        );
+
+
+    document.body.classList.add(
+        `weather-${weatherType}`
+    );
+
+
+    /*
+     * Add a data attribute too.
+     *
+     * This is useful if you later want CSS such as:
+     *
+     * body[data-weather="rain"]
+     */
+
+    document.body.dataset.weather =
+        weatherType;
+
+
+    document.body.dataset.time =
+        isNight
+            ? "night"
+            : "day";
+
+
+    // =====================================
+    // UPDATE PARTICLES
+    // =====================================
+
+    updateWeatherParticles(
+        weatherType
+    );
+
+
+    // =====================================
+    // CHECK AGAIN LATER
+    // =====================================
+
+    scheduleBackgroundUpdate();
 }
 
-createWeatherParticles();
+
+// =========================================================
+// 15. DETERMINE DAY / NIGHT
+// =========================================================
+
+function determineNightState(data) {
+
+    /*
+     * Open-Meteo provides is_day:
+     *
+     * 1 = day
+     * 0 = night
+     *
+     * Use it first because it directly describes
+     * the current weather observation.
+     */
+
+    if (
+        data.current &&
+        typeof data.current.is_day !== "undefined"
+    ) {
+
+        return Number(
+            data.current.is_day
+        ) === 0;
+    }
+
+
+    /*
+     * Fallback:
+     *
+     * Compare current time with sunrise/sunset.
+     */
+
+    if (
+        data.daily &&
+        data.daily.sunrise &&
+        data.daily.sunset
+    ) {
+
+        const sunrise =
+            new Date(
+                data.daily.sunrise[0]
+            );
+
+        const sunset =
+            new Date(
+                data.daily.sunset[0]
+            );
+
+        const now =
+            new Date();
+
+        return (
+            now < sunrise ||
+            now >= sunset
+        );
+    }
+
+
+    /*
+     * Final fallback:
+     *
+     * Use the browser's local clock.
+     */
+
+    const hour =
+        new Date().getHours();
+
+    return (
+        hour < 6 ||
+        hour >= 18
+    );
+}
+
+
+// =========================================================
+// 16. WEATHER TYPE CLASSIFICATION
+// =========================================================
+
+function getWeatherBackgroundType(code) {
+
+    /*
+     * CLEAR
+     */
+
+    if (code === 0) {
+
+        return "clear";
+    }
+
+
+    /*
+     * CLOUDS
+     */
+
+    if (
+        code === 1 ||
+        code === 2 ||
+        code === 3
+    ) {
+
+        return "clouds";
+    }
+
+
+    /*
+     * FOG / MIST
+     */
+
+    if (
+        code === 45 ||
+        code === 48
+    ) {
+
+        return "fog";
+    }
+
+
+    /*
+     * DRIZZLE
+     */
+
+    if (
+        code === 51 ||
+        code === 53 ||
+        code === 55 ||
+        code === 56 ||
+        code === 57
+    ) {
+
+        return "drizzle";
+    }
+
+
+    /*
+     * RAIN
+     */
+
+    if (
+        code === 61 ||
+        code === 63 ||
+        code === 65 ||
+        code === 66 ||
+        code === 67 ||
+        code === 80 ||
+        code === 81 ||
+        code === 82
+    ) {
+
+        return "rain";
+    }
+
+
+    /*
+     * SNOW
+     */
+
+    if (
+        code === 71 ||
+        code === 73 ||
+        code === 75 ||
+        code === 77 ||
+        code === 85 ||
+        code === 86
+    ) {
+
+        return "snow";
+    }
+
+
+    /*
+     * THUNDERSTORM
+     */
+
+    if (
+        code === 95 ||
+        code === 96 ||
+        code === 99
+    ) {
+
+        return "storm";
+    }
+
+
+    /*
+     * DEFAULT
+     */
+
+    return "clear";
+}
+
+
+// =========================================================
+// 17. WEATHER PARTICLES
+// =========================================================
+
+function updateWeatherParticles(
+    weatherType
+) {
+
+    let particles =
+        document.querySelector(
+            ".weather-particles"
+        );
+
+
+    /*
+     * Create particle layer only once.
+     */
+
+    if (!particles) {
+
+        particles =
+            document.createElement(
+                "div"
+            );
+
+        particles.className =
+            "weather-particles";
+
+        particles.setAttribute(
+            "aria-hidden",
+            "true"
+        );
+
+        document.body.appendChild(
+            particles
+        );
+    }
+
+
+    /*
+     * Clear previous particle type.
+     */
+
+    particles.className =
+        "weather-particles";
+
+
+    /*
+     * Add weather-specific particle class.
+     */
+
+    if (
+        weatherType === "rain" ||
+        weatherType === "drizzle"
+    ) {
+
+        particles.classList.add(
+            "rain-particles"
+        );
+    }
+
+
+    if (
+        weatherType === "snow"
+    ) {
+
+        particles.classList.add(
+            "snow-particles"
+        );
+    }
+
+
+    if (
+        weatherType === "storm"
+    ) {
+
+        particles.classList.add(
+            "storm-particles"
+        );
+    }
+}
+
+
+// =========================================================
+// 18. AUTOMATIC DAY/NIGHT CHECK
+// =========================================================
+
+function scheduleBackgroundUpdate() {
+
+    /*
+     * Cancel previous timer.
+     */
+
+    if (backgroundTimer) {
+
+        clearTimeout(
+            backgroundTimer
+        );
+    }
+
+
+    /*
+     * Check again every minute.
+     *
+     * This allows the interface to transition
+     * from day → night without refreshing.
+     */
+
+    backgroundTimer =
+        setTimeout(
+            () => {
+
+                if (
+                    currentWeatherData
+                ) {
+
+                    updateWeatherBackground(
+                        currentWeatherData
+                    );
+                }
+
+            },
+            60 * 1000
+        );
+}
+
+
+// =========================================================
+// 19. INITIAL PARTICLE LAYER
+// =========================================================
+
+function initializeWeatherBackground() {
+
+    if (
+        !document.querySelector(
+            ".weather-particles"
+        )
+    ) {
+
+        const particles =
+            document.createElement(
+                "div"
+            );
+
+        particles.className =
+            "weather-particles";
+
+        particles.setAttribute(
+            "aria-hidden",
+            "true"
+        );
+
+        document.body.appendChild(
+            particles
+        );
+    }
+}
+
+
+initializeWeatherBackground();
+
+
+// =========================================================
+// 20. INITIAL DEFAULT BACKGROUND
+// =========================================================
+
+/*
+ * Before the user searches for a city,
+ * give the application a neutral daytime
+ * weather state.
+ */
+
+document.body.classList.add(
+    "weather-day",
+    "weather-clear"
+);
+
+
+// =========================================================
+// 21. CONSOLE CONFIRMATION
+// =========================================================
+
+console.log(
+    "Weather Dashboard JavaScript loaded successfully."
+);
