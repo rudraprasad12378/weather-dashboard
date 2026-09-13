@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="description" content="Real-time weather dashboard using JavaScript Fetch API and RESTful APIs.">
+
+    <meta name="keywords" content="weather dashboard, JavaScript, REST API, Fetch API, weather">
+
+    <meta name="author" content="Rudraprasad Nayak">
+
+    <title>Weather Dashboard | RESTful API</title>
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <!-- Header -->
+
+    <header class="site-header">
+
+        <div class="container header-container">
+
+            <div class="logo">
+                Weather<span>Now</span>
+            </div>
+
+            <p class="header-subtitle">
+                Real-Time Weather Dashboard
+            </p>
+
+        </div>
+
+    </header>
+
+
+    <!-- Main Content -->
+
+    <main>
+
+        <!-- Search Section -->
+
+        <section class="search-section">
+
+            <div class="container">
+
+                <div class="search-content">
+
+                    <p class="eyebrow">
+                        RESTful API
+                    </p>
+
+                    <h1>
+                        Check Weather Anywhere
+                    </h1>
+
+                    <p class="search-description">
+                        Enter a city name to get current weather
+                        information using a real-time weather API.
+                    </p>
+
+
+                    <form id="weather-form" class="search-form">
+
+                        <label for="city-input">
+                            Search by city
+                        </label>
+
+                        <div class="search-controls">
+
+                            <input type="text" id="city-input" name="city" placeholder="Enter city name..."
+                                autocomplete="off" required>
+
+                            <button type="submit" id="search-button" aria-label="Search weather by city">
+                                Search
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- Status Message -->
+
+        <section class="status-section" aria-live="polite" aria-atomic="true">
+
+            <div class="container">
+
+                <p id="status-message" class="status-message"></p>
+
+            </div>
+
+        </section>
+
+
+        <!-- Weather Dashboard -->
+
+        <section class="weather-section" aria-labelledby="weather-heading">
+
+            <div class="container">
+
+                <div class="weather-header">
+
+                    <div>
+
+                        <p class="eyebrow">
+                            Current Weather
+                        </p>
+
+                        <h2 id="weather-heading">
+                            Weather Information
+                        </h2>
+
+                    </div>
+
+                    <div class="location-info">
+
+                        <p id="weather-location">
+                            Search for a city
+                        </p>
+
+                        <p id="last-updated">
+                            Last updated: --
+                        </p>
+
+                    </div>
+                </div>
+
+
+                <!-- Weather Cards -->
+
+                <div id="weather-container" class="weather-grid">
+
+                    <!-- Temperature -->
+
+                    <article class="weather-card">
+
+                        <div class="weather-icon" id="weather-icon" aria-hidden="true">
+                            🌡️
+                        </div>
+
+                        <div>
+
+                            <h3>
+                                Temperature
+                            </h3>
+
+                            <p id="temperature" class="weather-value" aria-live="polite">
+                                -- °C
+                            </p>
+
+                        </div>
+
+                    </article>
+
+
+                    <!-- Humidity -->
+
+                    <article class="weather-card">
+
+                        <div class="weather-icon">
+                            💧
+                        </div>
+
+                        <div>
+
+                            <h3>
+                                Humidity
+                            </h3>
+                            <p id="humidity" class="weather-value" aria-live="polite">
+                                -- %
+                            </p>
+
+
+                        </div>
+
+                    </article>
+
+
+                    <!-- Wind Speed -->
+
+                    <article class="weather-card">
+
+                        <div class="weather-icon">
+                            💨
+                        </div>
+
+                        <div>
+
+                            <h3>
+                                Wind Speed
+                            </h3>
+
+                            <p id="wind-speed" class="weather-value" aria-live="polite">
+                                -- km/h
+                            </p>
+                        </div>
+
+                    </article>
+
+                </div>
+
+
+                <!-- Additional Weather Information -->
+
+                <div id="weather-details" class="weather-details">
+
+                    <article class="detail-card">
+
+                        <h3>
+                            Weather Condition
+                        </h3>
+
+                        <p id="weather-condition" aria-live="polite">
+                            --
+                        </p>
+
+                    </article>
+
+
+                    <article class="detail-card">
+
+                        <h3>
+                            Feels Like
+                        </h3>
+
+                        <p id="feels-like" aria-live="polite">
+                            -- °C
+                        </p>
+                    </article>
+
+
+                    <article class="detail-card">
+
+                        <h3>
+                            Pressure
+                        </h3>
+                        <p id="pressure" aria-live="polite">
+                            -- hPa
+                        </p>
+
+                    </article>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- Loading -->
+
+        <div id="loading" class="loading" hidden role="status" aria-live="polite"
+            aria-label="Loading weather information">
+
+            <div class="spinner" aria-hidden="true"></div>
+
+            <p>
+                Fetching weather data...
+            </p>
+
+        </div>
+
+        <!-- Error -->
+
+        <div id="error-message" class="error-message" role="alert" hidden>
+
+            <p>
+                Unable to fetch weather information.
+            </p>
+
+        </div>
+
+    </main>
+
+
+    <!-- Footer -->
+
+    <footer class="site-footer">
+
+        <div class="container">
+
+            <p>
+                &copy; 2026 Weather Dashboard
+            </p>
+
+            <p>
+                Built with JavaScript Fetch API &amp; RESTful APIs.
+            </p>
+
+        </div>
+
+    </footer>
+
+
+    <script src="js/script.js"></script>
+
+</body>
+
+</html>
