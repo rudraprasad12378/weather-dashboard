@@ -1092,3 +1092,326 @@ document.body.classList.add(
 console.log(
     "Weather Dashboard JavaScript loaded successfully."
 );
+
+/* =========================================================
+   CURRENT LOCATION WEATHER
+   ========================================================= */
+
+const locationButton =
+    document.getElementById("location-button");
+
+
+/*
+ * Get weather using the user's current
+ * browser/device location.
+ */
+function getCurrentLocationWeather() {
+
+    if (!navigator.geolocation) {
+
+        showLocationError(
+            "Geolocation is not supported by your browser."
+        );
+
+        return;
+    }
+
+
+    locationButton.disabled = true;
+
+    locationButton.textContent =
+        "📍 Locating...";
+
+
+    if (statusMessage) {
+
+        statusMessage.textContent =
+            "Getting your current location...";
+    }
+
+
+    navigator.geolocation.getCurrentPosition(
+
+        async function (position) {
+
+            const latitude =
+                position.coords.latitude;
+
+            const longitude =
+                position.coords.longitude;
+
+
+            console.log(
+                "Current coordinates:",
+                latitude,
+                longitude
+            );
+
+
+            try {
+
+                /*
+                 * IMPORTANT:
+                 *
+                 * This uses the Open-Meteo API,
+                 * which matches your existing
+                 * weather application.
+                 */
+
+                const weatherURL =
+                    `${WEATHER_API}` +
+                    `?latitude=${latitude}` +
+                    `&longitude=${longitude}` +
+                    `&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,surface_pressure,is_day` +
+                    `&daily=sunrise,sunset` +
+                    `&wind_speed_unit=kmh` +
+                    `&timezone=auto`;
+
+
+                const response =
+                    await fetchWithTimeout(
+                        weatherURL
+                    );
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        "Unable to fetch weather for your location."
+                    );
+                }
+
+
+                const weather =
+                    await response.json();
+
+
+                /*
+                 * Get city name from coordinates.
+                 *
+                 * Open-Meteo's reverse geocoding
+                 * endpoint is used here.
+                 */
+
+                const locationURL =
+                    `https://geocoding-api.open-meteo.com/v1/reverse` +
+                    `?latitude=${latitude}` +
+                    `&longitude=${longitude}` +
+                    `&language=en` +
+                    `&format=json`;
+
+
+                let location = {
+
+                    name: "Your Location",
+
+                    country: ""
+                };
+
+
+                try {
+
+                    const locationResponse =
+                        await fetchWithTimeout(
+                            locationURL
+                        );
+
+
+                    if (locationResponse.ok) {
+
+                        const locationData =
+                            await locationResponse.json();
+
+
+                        if (
+                            locationData.results &&
+                            locationData.results.length > 0
+                        ) {
+
+                            const result =
+                                locationData.results[0];
+
+
+                            location = {
+
+                                name:
+                                    result.name ||
+                                    result.city ||
+                                    result.town ||
+                                    result.village ||
+                                    "Your Location",
+
+                                country:
+                                    result.country ||
+                                    ""
+                            };
+                        }
+                    }
+
+                } catch (locationError) {
+
+                    console.warn(
+                        "Could not determine city name:",
+                        locationError
+                    );
+                }
+
+
+                /*
+                 * Use the SAME display system
+                 * as your city search.
+                 */
+
+                displayWeather(
+                    location,
+                    weather
+                );
+
+
+                /*
+                 * Update your dynamic
+                 * weather/day-night background.
+                 */
+
+                updateWeatherBackground(
+                    weather
+                );
+
+
+                if (statusMessage) {
+
+                    statusMessage.textContent =
+                        `Showing weather for your current location.`;
+                }
+
+
+            } catch (error) {
+
+                console.error(
+                    "Current location weather error:",
+                    error
+                );
+
+
+                showLocationError(
+                    error.message ||
+                    "Unable to fetch weather for your current location."
+                );
+
+            } finally {
+
+                locationButton.disabled =
+                    false;
+
+                locationButton.textContent =
+                    "📍 My Location";
+            }
+        },
+
+
+        function (error) {
+
+            console.error(
+                "Geolocation error:",
+                error
+            );
+
+
+            let message;
+
+
+            switch (error.code) {
+
+                case error.PERMISSION_DENIED:
+
+                    message =
+                        "Location permission was denied. Please allow location access in your browser.";
+
+                    break;
+
+
+                case error.POSITION_UNAVAILABLE:
+
+                    message =
+                        "Your current location could not be determined.";
+
+                    break;
+
+
+                case error.TIMEOUT:
+
+                    message =
+                        "Location request timed out. Please try again.";
+
+                    break;
+
+
+                default:
+
+                    message =
+                        "Unable to determine your current location.";
+            }
+
+
+            showLocationError(message);
+
+
+            locationButton.disabled =
+                false;
+
+            locationButton.textContent =
+                "📍 My Location";
+        },
+
+
+        {
+            enableHighAccuracy: true,
+
+            timeout: 10000,
+
+            maximumAge: 300000
+        }
+    );
+}
+
+
+/* =========================================================
+   LOCATION ERROR
+   ========================================================= */
+
+function showLocationError(message) {
+
+    if (
+        typeof showError === "function"
+    ) {
+
+        showError(message);
+
+    } else if (errorMessage) {
+
+        errorMessage.hidden =
+            false;
+
+        const errorText =
+            errorMessage.querySelector("p");
+
+        if (errorText) {
+
+            errorText.textContent =
+                message;
+        }
+    }
+}
+
+
+/* =========================================================
+   LOCATION BUTTON EVENT
+   ========================================================= */
+
+if (locationButton) {
+
+    locationButton.addEventListener(
+        "click",
+        getCurrentLocationWeather
+    );
+}

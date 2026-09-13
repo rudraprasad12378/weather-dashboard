@@ -1799,3 +1799,81 @@ body.weather-night .site-footer p {
             0.01ms !important;
     }
 }
+
+/* =========================================================
+   CURRENT LOCATION BUTTON
+   ========================================================= */
+
+.location-button {
+    min-height: 60px;
+    padding: 0 24px;
+
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    border-radius: 16px;
+
+    background: rgba(255, 255, 255, 0.72);
+
+    color: #10213d;
+
+    font-weight: 750;
+
+    white-space: nowrap;
+
+    box-shadow:
+        0 10px 25px rgba(20, 55, 90, 0.08);
+
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+
+    transition:
+        transform 180ms ease,
+        background 180ms ease,
+        box-shadow 180ms ease;
+}
+
+.location-button:hover {
+    transform: translateY(-2px);
+
+    background: rgba(255, 255, 255, 0.92);
+
+    box-shadow:
+        0 15px 30px rgba(20, 55, 90, 0.13);
+}
+
+.location-button:active {
+    transform: translateY(0);
+}
+
+.location-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+    transform: none;
+}
+
+
+/* Night mode */
+
+body.weather-night .location-button {
+    background: rgba(255, 255, 255, 0.12);
+
+    border-color:
+        rgba(255, 255, 255, 0.15);
+
+    color: #ffffff;
+}
+
+body.weather-night .location-button:hover {
+    background:
+        rgba(255, 255, 255, 0.18);
+}
+
+
+/* Mobile */
+
+@media (max-width: 640px) {
+
+    .location-button {
+        width: 100%;
+        min-height: 56px;
+    }
+}
