@@ -810,6 +810,26 @@ body.weather-night .status-message {
 }
 
 
+.current-location-name {
+
+    margin-top: 8px;
+
+    font-size: 1.1rem;
+
+    font-weight: 600;
+
+    color: #10213d;
+
+    text-align: center;
+}
+
+
+body.weather-night .current-location-name {
+
+    color: rgba(255, 255, 255, 0.9);
+}
+
+
 /* =========================================================
    16. WEATHER SECTION
    ========================================================= */

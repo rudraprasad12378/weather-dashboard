@@ -34,6 +34,9 @@ const locationButton =
 const statusMessage =
     document.getElementById("status-message");
 
+const currentLocationName =
+    document.getElementById("current-location-name");
+
 const loading =
     document.getElementById("loading");
 
@@ -198,6 +201,11 @@ function showLoading(message = "Fetching weather data...") {
     statusMessage.textContent =
         message;
 
+    if (currentLocationName) {
+        currentLocationName.textContent =
+            "";
+    }
+
     searchButton.disabled = true;
 
     if (locationButton) {
@@ -228,6 +236,11 @@ function showError(message) {
         message;
 
     statusMessage.textContent = "";
+
+    if (currentLocationName) {
+        currentLocationName.textContent =
+            "";
+    }
 }
 
 
@@ -1130,6 +1143,9 @@ async function reverseGeocodeCoordinates(
                         result.town ||
                         result.village ||
                         "Your Current Location",
+                    admin1:
+                        result.admin1 ||
+                        "",
                     country:
                         result.country ||
                         ""
@@ -1221,6 +1237,22 @@ async function loadWeatherForCurrentLocation() {
                 if (statusMessage) {
                     statusMessage.textContent =
                         "Showing weather for your current location.";
+                }
+
+                const locationParts = [
+                    location.name,
+                    location.admin1,
+                    location.country
+                ].filter(Boolean);
+
+                const locationName =
+                    locationParts.length > 0
+                        ? locationParts.join(", ")
+                        : "Your Current Location";
+
+                if (currentLocationName) {
+                    currentLocationName.textContent =
+                        locationName;
                 }
 
                 hideError();
