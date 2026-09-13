@@ -1106,17 +1106,13 @@ function initializeWeatherBackground() {
 // 20. REVERSE GEOCODING COORDINATES
 // =========================================================
 
-async function reverseGeocodeCoordinates(
+async function reverseGeocode(
     latitude,
     longitude
 ) {
 
     const url =
-        `https://geocoding-api.open-meteo.com/v1/reverse` +
-        `?latitude=${latitude}` +
-        `&longitude=${longitude}` +
-        `&language=en` +
-        `&format=json`;
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${encodeURIComponent(latitude)}&lon=${encodeURIComponent(longitude)}&zoom=10&addressdetails=1`;
 
     try {
 
@@ -1129,42 +1125,52 @@ async function reverseGeocodeCoordinates(
                 await response.json();
 
             if (
-                data.results &&
-                data.results.length > 0
+                data &&
+                data.address
             ) {
 
-                const result =
-                    data.results[0];
+                const address =
+                    data.address;
 
-                return {
-                    name:
-                        result.name ||
-                        result.city ||
-                        result.town ||
-                        result.village ||
-                        "Your Current Location",
-                    admin1:
-                        result.admin1 ||
-                        "",
-                    country:
-                        result.country ||
-                        ""
-                };
+                const locality =
+                    address.city ||
+                    address.town ||
+                    address.village ||
+                    address.municipality ||
+                    address.suburb ||
+                    address.county ||
+                    "";
+
+                const state =
+                    address.state ||
+                    "";
+
+                const country =
+                    address.country ||
+                    "";
+
+                const parts = [
+                    locality,
+                    state,
+                    country
+                ].filter(Boolean);
+
+                if (parts.length > 0) {
+
+                    return parts.join(", ");
+                }
             }
         }
 
     } catch (error) {
 
         console.warn(
-            "Could not determine city name from coordinates, using fallback:",
+            "Reverse geocoding error:",
             error
         );
     }
 
-    return {
-        name: "Your Current Location",
-        country: ""
-    };
+    return "Your Current Location";
 }
 
 
@@ -1216,15 +1222,30 @@ async function loadWeatherForCurrentLocation() {
                     );
 
                 // Step 2: Reverse geocode to get city name
-                const location =
-                    await reverseGeocodeCoordinates(
-                        latitude,
-                        longitude
+                let locationName = "Your Current Location";
+
+                try {
+
+                    locationName =
+                        await reverseGeocode(
+                            latitude,
+                            longitude
+                        );
+
+                } catch (geocodeError) {
+
+                    console.warn(
+                        "Reverse geocoding failed:",
+                        geocodeError
                     );
+                }
 
                 // Step 3: Display weather with existing displayWeather
                 displayWeather(
-                    location,
+                    {
+                        name: locationName,
+                        country: ""
+                    },
                     weather
                 );
 
@@ -1239,19 +1260,13 @@ async function loadWeatherForCurrentLocation() {
                         "Showing weather for your current location.";
                 }
 
-                const locationParts = [
-                    location.name,
-                    location.admin1,
-                    location.country
-                ].filter(Boolean);
-
-                const locationName =
-                    locationParts.length > 0
-                        ? locationParts.join(", ")
-                        : "Your Current Location";
-
                 if (currentLocationName) {
                     currentLocationName.textContent =
+                        locationName;
+                }
+
+                if (weatherLocation) {
+                    weatherLocation.textContent =
                         locationName;
                 }
 
